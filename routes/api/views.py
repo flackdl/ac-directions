@@ -11,8 +11,3 @@ class RouteViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == 'retrieve':
             return RouteDetailSerializer
         return super(RouteViewSet, self).get_serializer_class()
-
-
-class CoordViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Coord.objects.all()
-    serializer_class = CoordSerializer
