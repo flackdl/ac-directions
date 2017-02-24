@@ -7,3 +7,12 @@ class Route(models.Model):
     
     def __unicode__(self):
         return self.name
+        
+
+class Coord(models.Model):
+    route = models.ForeignKey(Route, related_name='coords')
+    longitude = models.FloatField()
+    latitude = models.FloatField()
+    
+    def __unicode__(self):
+        return '%s,%s' % (self.latitude, self.longitude)
