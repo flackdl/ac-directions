@@ -27,24 +27,26 @@ class Command(BaseCommand):
             # build route name from file name
             route_name = self.get_route_name(filename)
             
-            # delete coords for same route
+            # existing route found so delete coords
             route = Route.objects.all().filter(name=route_name)
             if route:
-                print 'Found route..'
-                coords = Coord.objects.all().filter(route__id=route[0].id)
-                print 'Deleting coords..'
+                route = route[0]
+                self.stdout.write(self.style.SUCCESS('Found existing route %s' % route_name))
+                coords = Coord.objects.all().filter(route__id=route.id)
+                self.stdout.write(self.style.SUCCESS('Deleting coords...'))
                 coords.delete()
+            # create new route
+            else:
+                self.stdout.write(self.style.SUCCESS('Importing new route %s' % route_name))
+                route = Route(name=route_name)
+                route.save()
             
             tree = etree.parse(filename)
             tracks = tree.xpath('//gx:Tour//x:LookAt',
                 namespaces=self.ns,
             )
             
-            # create new route
-            route = Route(name=route_name)
-            route.save()
-            
-            # assigne coordinates
+            # assign coordinates
             for track in tracks:
                 Coord(
                     route=route,
