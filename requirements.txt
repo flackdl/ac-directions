@@ -1,6 +1,5 @@
 appdirs==1.4.0
 blessings==1.6
-bpython==0.16
 bzr==2.7.0.dev1
 BzrTools==2.6.0
 chardet==2.0.1
