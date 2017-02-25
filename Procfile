@@ -1,1 +1,1 @@
-web: gunicorn ac_directions
+web: gunicorn ac_directions.wsgi
