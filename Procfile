@@ -1,1 +1,1 @@
-web: gunicorn ac-directions
+web: gunicorn ac_directions
