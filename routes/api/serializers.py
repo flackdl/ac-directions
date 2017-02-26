@@ -7,16 +7,17 @@ class RouteSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Route
         fields = ('id', 'name',)
-        
-        
-class RouteDetailSerializer(RouteSerializer):
-    coords = serializers.StringRelatedField(many=True)
-    class Meta:
-        model = Route
-        fields = ('id', 'name', 'coords')
 
 
 class CoordSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Coord
-        fields = ('route', 'latitude', 'longitude')
+        fields = ('latitude', 'longitude')
+        
+        
+class RouteDetailSerializer(RouteSerializer):
+    coords = CoordSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Route
+        fields = ('id', 'name', 'coords')
