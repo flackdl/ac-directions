@@ -1,5 +1,5 @@
-from routes.models import Route, Coord
-from routes.api.serializers import RouteSerializer, RouteDetailSerializer, CoordSerializer
+from routes.models import Route
+from routes.api.serializers import RouteSerializer, RouteDetailSerializer
 from rest_framework import viewsets
 
 

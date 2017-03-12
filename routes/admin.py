@@ -1,6 +1,5 @@
 from django.contrib import admin
-from routes.models import Route, Coord
+from routes.models import Route
 
 admin.site.register(Route)
-admin.site.register(Coord)
 

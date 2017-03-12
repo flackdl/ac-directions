@@ -2,7 +2,7 @@ import re
 import os
 import glob
 from lxml import etree
-from routes.models import Route, Coord
+from routes.models import Route
 from django.core.management.base import BaseCommand, CommandError
 
 
@@ -23,6 +23,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # import all the kml routes
         for filename in glob.glob('routes/kml/*.kml'):
+            coords = []
             
             # build route name from file name
             route_name = self.get_route_name(filename)
@@ -31,10 +32,8 @@ class Command(BaseCommand):
             route = Route.objects.all().filter(name=route_name)
             if route:
                 route = route[0]
-                self.stdout.write(self.style.SUCCESS('Found existing route %s' % route_name))
-                coords = Coord.objects.all().filter(route__id=route.id)
-                self.stdout.write(self.style.SUCCESS('Deleting coords...'))
-                coords.delete()
+                self.stdout.write(self.style.WARNING('Found existing route %s' % route_name))
+                self.stdout.write(self.style.NOTICE('Deleting %s coords' % len(route.coords)))
             # create new route
             else:
                 self.stdout.write(self.style.SUCCESS('Importing new route %s' % route_name))
@@ -48,10 +47,12 @@ class Command(BaseCommand):
             
             # assign coordinates
             for track in tracks:
-                Coord(
-                    route=route,
-                    longitude=track.xpath('./x:longitude', namespaces=self.ns)[0].text,
-                    latitude=track.xpath('./x:latitude', namespaces=self.ns)[0].text,
-                ).save()
+                coords.append('%s,%s' % (
+                    track.xpath('./x:latitude', namespaces=self.ns)[0].text,
+                    track.xpath('./x:longitude', namespaces=self.ns)[0].text,
+                ))
+            self.stdout.write(self.style.SUCCESS('Saving coords'))
+            route.coords = coords
+            route.save()
                 
         self.stdout.write(self.style.SUCCESS('Successfully imported'))
