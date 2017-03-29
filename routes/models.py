@@ -3,6 +3,12 @@ from django.db import models
 from django.contrib.postgres import fields
 
 
+class JSONFieldCustom(fields.JSONField):
+   def db_type(self, connection):
+        return 'json'
+
+
+
 class Route(models.Model):
     name = models.CharField(max_length=60)
     coords = fields.ArrayField(models.CharField(max_length=255), default=list())
@@ -19,3 +25,8 @@ class Route(models.Model):
     
     def __unicode__(self):
         return self.name
+        
+        
+class Directions(models.Model):
+    route = models.ForeignKey(Route, on_delete=models.CASCADE)
+    directions = JSONFieldCustom()

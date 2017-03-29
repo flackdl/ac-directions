@@ -1,5 +1,5 @@
-from routes.models import Route
-from routes.api.serializers import RouteSerializer, RouteDetailSerializer
+from routes.models import Route, Directions
+from routes.api.serializers import RouteSerializer, RouteDetailSerializer, DirectionsSerializer
 from rest_framework import viewsets
 
 
@@ -11,3 +11,8 @@ class RouteViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == 'retrieve':
             return RouteDetailSerializer
         return super(RouteViewSet, self).get_serializer_class()
+        
+
+class DirectionsViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Directions.objects.all()
+    serializer_class = DirectionsSerializer
