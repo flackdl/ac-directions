@@ -1,4 +1,5 @@
 import os
+import traceback
 import requests
 from urllib import urlencode
 from routes.models import Route, Directions
@@ -58,7 +59,8 @@ class Command(BaseCommand):
                             route_directions['legs'] += json['routes'][0]['legs']
                                 
                         waypoint_index += MAX_WAYPOINTS
-                        has_waypoints = waypoint_index <= len(route.coords) - 1
+                        # make sure we have at least two waypoints left
+                        has_waypoints = len(route.coords) - 1 - waypoint_index >= 2;
                     else:
                         raise Exception(response.content)
             except Exception as e:
@@ -66,6 +68,7 @@ class Command(BaseCommand):
                 # delete this directions record if it's already been saved
                 if directions.pk:
                     directions.delete()
+                print traceback.format_exc()
                 # just quit entirely - we may be throttled
                 break
             
