@@ -1,5 +1,5 @@
 import os
-import traceback
+import time
 import requests
 from urllib import urlencode
 from routes.models import Route, Directions
@@ -46,6 +46,7 @@ class Command(BaseCommand):
             waypoint_index = 0
             try:
                 while(has_waypoints):
+                    time.sleep(.25)
                     fetch_waypoints = route.coords[waypoint_index:waypoint_index + MAX_WAYPOINTS]
                     response = self.get_directions(fetch_waypoints)
                     if response.ok:
@@ -56,6 +57,9 @@ class Command(BaseCommand):
                             route_directions = json['routes'][0]
                         else:
                             # append legs
+                            if not json.get('routes') or not len(json['routes']):
+                                print response.url
+                                self.stdout.write(self.style.NOTICE('No route found for waypoints, skipping'))
                             route_directions['legs'] += json['routes'][0]['legs']
                                 
                         waypoint_index += MAX_WAYPOINTS
@@ -68,7 +72,6 @@ class Command(BaseCommand):
                 # delete this directions record if it's already been saved
                 if directions.pk:
                     directions.delete()
-                print traceback.format_exc()
                 # just quit entirely - we may be throttled
                 break
             
