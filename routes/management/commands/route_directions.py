@@ -20,33 +20,51 @@ class Command(BaseCommand):
             'access_token': os.getenv('MAPBOX_ACCESS_TOKEN'),
         }
         url = '%s%s?%s' % (DIRECTIONS_URL, coords_joined, urlencode(params))
+        print url
         return requests.get(url) 
         
         
     def handle(self, *args, **options):
         routes = Route.objects.all()
         for route in routes:
-            route_directions = []
+            self.stdout.write(self.style.NOTICE('route has %s waypoints' % len(route.coords)))
+            
+            # get/create directions record for this route
+            directions = Directions.objects.filter(route=route)
+            if directions.exists():
+                directions = directions[0]
+            else:
+                directions = Directions(
+                    route=route,
+                )
+                
+            # build a running list of directions while iterating over chunks of waypoints
+            route_directions = None
             has_waypoints = True
-            coord_index = 0
+            waypoint_index = 0
             try:
                 while(has_waypoints):
-                    response = self.get_directions(route.coords[coord_index:MAX_WAYPOINTS - 1])
+                    fetch_waypoints = route.coords[waypoint_index:waypoint_index + MAX_WAYPOINTS]
+                    response = self.get_directions(fetch_waypoints)
                     if response.ok:
-                        print response.content
-                        directions = Directions(
-                            route=route,
-                            # TODO - append vs overwrite
-                            directions=response.content, 
-                        )
-                        directions.save()
-                        coord_index += MAX_WAYPOINTS
-                        has_waypoints = coord_index >= len(route.coords)
+                        json = response.json()
+                        # first saving of directions for this route
+                        if not route_directions:
+                            self.stdout.write(self.style.NOTICE('first route iteration'))
+                            # use first route returned
+                            route_directions = json['routes'][0]
+                        else:
+                            # append legs
+                            route_directions['legs'] += json['routes'][0]['legs']
+                                
+                        waypoint_index += MAX_WAYPOINTS
+                        has_waypoints = waypoint_index <= len(route.coords) - 1
                     else:
-                        raise Exception
+                        raise Exception('bad response %s' % e)
             except Exception as e:
-                self.stdout.write(self.style.WARNING('Failed getting directions for %s so skipping route entirely' % route))
+                self.stdout.write(self.style.WARNING('Failed getting directions for %s so skipping route entirely (%s)' % (route, e)))
                 continue
-                
+            
+            directions.directions = route_directions
+            directions.save()
             self.stdout.write(self.style.SUCCESS('Successfully retrieved directions for %s' % route))
-            break

@@ -1,3 +1,4 @@
+import json
 from django.contrib.auth.models import User, Group
 from routes.models import Route, Directions
 from rest_framework import serializers
@@ -19,4 +20,10 @@ class RouteDetailSerializer(RouteSerializer):
 class DirectionsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Directions
-        fields = ('route', 'directions',)
+        fields = ('id', 'route',)
+
+
+class DirectionsDetailSerializer(DirectionsSerializer):
+    class Meta:
+        model = Directions
+        fields = ('id', 'route', 'directions')
