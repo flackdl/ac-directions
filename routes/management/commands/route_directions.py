@@ -20,7 +20,6 @@ class Command(BaseCommand):
             'access_token': os.getenv('MAPBOX_ACCESS_TOKEN'),
         }
         url = '%s%s?%s' % (DIRECTIONS_URL, coords_joined, urlencode(params))
-        print url
         return requests.get(url) 
         
         
@@ -32,7 +31,8 @@ class Command(BaseCommand):
             # get/create directions record for this route
             directions = Directions.objects.filter(route=route)
             if directions.exists():
-                directions = directions[0]
+                self.stdout.write(self.style.NOTICE('route %s exists so skipping' % route))
+                continue
             else:
                 directions = Directions(
                     route=route,
@@ -60,7 +60,7 @@ class Command(BaseCommand):
                         waypoint_index += MAX_WAYPOINTS
                         has_waypoints = waypoint_index <= len(route.coords) - 1
                     else:
-                        raise Exception('bad response %s' % e)
+                        raise Exception('bad response %s' % response.content)
             except Exception as e:
                 self.stdout.write(self.style.WARNING('Failed getting directions for %s so skipping route entirely (%s)' % (route, e)))
                 continue
