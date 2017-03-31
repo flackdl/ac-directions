@@ -26,17 +26,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         routes = Route.objects.all()
         for route in routes:
-            self.stdout.write(self.style.NOTICE('route has %s waypoints' % len(route.coords)))
             
             # get/create directions record for this route
             directions = Directions.objects.filter(route=route)
             if directions.exists():
-                self.stdout.write(self.style.NOTICE('route %s exists so skipping' % route))
+                self.stdout.write(self.style.WARNING('route %s exists so skipping' % route))
                 continue
             else:
                 directions = Directions(
                     route=route,
                 )
+                
+            self.stdout.write(self.style.WARNING('fetching route %s which has %s waypoints' % (route, len(route.coords))))
                 
             # build a running list of directions while iterating over chunks of waypoints
             route_directions = None
@@ -50,7 +51,6 @@ class Command(BaseCommand):
                         json = response.json()
                         # first saving of directions for this route
                         if not route_directions:
-                            self.stdout.write(self.style.NOTICE('first route iteration'))
                             # use first route returned
                             route_directions = json['routes'][0]
                         else:
@@ -60,10 +60,14 @@ class Command(BaseCommand):
                         waypoint_index += MAX_WAYPOINTS
                         has_waypoints = waypoint_index <= len(route.coords) - 1
                     else:
-                        raise Exception('bad response %s' % response.content)
+                        raise Exception(response.content)
             except Exception as e:
-                self.stdout.write(self.style.WARNING('Failed getting directions for %s so skipping route entirely (%s)' % (route, e)))
-                continue
+                self.stdout.write(self.style.NOTICE('Failed getting directions for %s so deleting route directions (%s)' % (route, e)))
+                # delete this directions record if it's already been saved
+                if directions.pk:
+                    directions.delete()
+                # just quit entirely - we may be throttled
+                break
             
             directions.directions = route_directions
             directions.save()
