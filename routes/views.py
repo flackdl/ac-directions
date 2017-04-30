@@ -6,3 +6,7 @@ class MapView(TemplateView):
     
 class VuetifyView(TemplateView):
     template_name = 'vuetify.html'
+    
+    
+class DirectionsView(TemplateView):
+    template_name = 'directions.html'
