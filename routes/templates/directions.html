@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
     
+    <script src="/static/polyline.js"></script>
+    
     <script src="https://unpkg.com/vue"></script>
     <script src="https://cdn.jsdelivr.net/vue.resource/1.2.0/vue-resource.min.js"></script>
     
@@ -36,24 +38,31 @@
                     attribution: '© OpenStreetMap contributors'
                 }).addTo(map);
                 
-                this.$http.get('/api/routes/24/').then(
+                this.$http.get('/api/directions/24/').then(
                     function(response) {
                         console.log('success');
                         response.json().then(function(json) {
                             
-                            let coords = json.coords;
-                            let waypoints = [];
+                            points = [];
                             
-                            _.each(coords, (coord) => {
-                                latLng = coord.split(',');
-                                waypoints.push(L.latLng(latLng));
-                                L.marker(latLng).addTo(map);
+                            _.each(json.directions.legs, (leg) => {
+                                _.each(leg.steps, (step) => {
+                                    try {
+                                        let step_points = polyline.decode(step.geometry);
+                                        _.each(step_points, (step_point) => {
+                                            points.push(step_point);
+                                        });
+                                    } catch (e) {
+                                        //console.log(e, step);
+                                    }
+                                });
                             });
                             
-                            map.setView(waypoints[0], 13);
+                            console.log(points);
                             
-                            console.log(waypoints);
+                            L.polyline(points, {color: 'red'}).addTo(map);
                             
+                            map.setView(points[0], 13);
                         });
                     },
                     function(response) {
